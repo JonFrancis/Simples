@@ -8,11 +8,12 @@
 
 using namespace std;
 
-// Algoritmo BWA: representa conjuntos como vetores de bits e faz AND bit a bit.
-// Complexidade total vem de criar os vetores de bits (O(n)) e do AND bit a bit (O(2^sigma)).
-// Simples e rapido quando o universo e pequeno.
-// Quando sigma cresce, o vetor tem tamanho 2^sigma e a tecnica fica inviavel em memoria e tempo.
-// Neste codigo sigma e calculado automaticamente a partir de n (o maior valor em A ou B)
+/*
+Algoritmo BWA: representa conjuntos como vetores de bits e faz AND bit a bit.
+Complexidade total vem de criar os vetores de bits (O(n)) e do AND bit a bit (O(2^sigma)).
+Simples e rapido quando o universo e pequeno.
+Quando sigma cresce, o vetor tem tamanho 2^sigma e a tecnica fica inviavel em memoria e tempo.
+*/
 Stats runBWA(const vector<int>& A, const vector<int>& B, int sigma) {
     if (A.size() != B.size()) {
         throw invalid_argument("BWA espera conjuntos A e B com o mesmo tamanho.");
@@ -54,9 +55,11 @@ Stats runBWA(const vector<int>& A, const vector<int>& B, int sigma) {
     return stats;
 }
 
-// Algoritmo PWC: compara todos os pares possiveis e por isso tem pior caso O(n^2).
-// Melhor caso O(n) quando os conjuntos sao iguais, mas o short-circuit economiza comparacoes apenas nesse caso.
-// Simples e intuitivo, mas ineficiente para n grande. 
+/*
+Algoritmo PWC: compara todos os pares possiveis e por isso tem pior caso O(n^2).
+Melhor caso O(n) quando os conjuntos sao iguais, mas o short-circuit economiza comparacoes apenas nesse caso.
+Simples e intuitivo, mas ineficiente para n grande. 
+*/
 Stats runPWC(const vector<int>& A, const vector<int>& B, int sigma) {
     if (A.size() != B.size()) {
         throw invalid_argument("PWC espera conjuntos A e B com o mesmo tamanho.");
@@ -97,6 +100,9 @@ Stats runPWC(const vector<int>& A, const vector<int>& B, int sigma) {
     return stats;
 }
 
+/*
+Funcao de comparação e troca usada tanto no Bitonic Merge quanto no Bitonic Sort.
+*/
 void compareExchange(vector<int>& v, int i, int j, bool ascending, long long& counter) {
     ++counter;
 
@@ -111,6 +117,9 @@ void compareExchange(vector<int>& v, int i, int j, bool ascending, long long& co
     }
 }
 
+/*
+Função recursiva do Bitonic Merge
+*/
 void bitonicMergeAscending(vector<int>& v, int start, int size, long long& counter) {
     if (size <= 1) {
         return;
@@ -125,9 +134,11 @@ void bitonicMergeAscending(vector<int>& v, int start, int size, long long& count
     bitonicMergeAscending(v, start + half, half, counter);
 }
 
-// O Bitonic Merge tem complexidade O(n log n) e produz uma sequencia fixa de comparacoes
-// Escolha foi feita para simular o que aconteceria no circuito garbled
-// Ã‰ um divisÃ£o e conquista que ordena uma sequencia bitonica (primeira metade crescente, segunda metade decrescente) em ordem crescente
+/*
+O Bitonic Merge tem complexidade O(n log n) e produz uma sequencia fixa de comparacoes
+Escolha foi feita para simular o que aconteceria no circuito garbled
+É uma divisão e conquista que ordena uma sequencia bitonica (primeira metade crescente, segunda metade decrescente) em ordem crescente
+*/
 vector<int> bitonicMergeSortedSets(vector<int> A, vector<int> B, long long& counter) {
     sort(A.begin(), A.end());
     sort(B.begin(), B.end());
@@ -152,7 +163,9 @@ vector<int> bitonicMergeSortedSets(vector<int> A, vector<int> B, long long& coun
     return merged;
 }
 
-// A Ãºltima comparaÃ§Ã£o Ã© feita entre os dois Ãºltimos elementos
+/*
+A última comparação feita entre os dois últimos elementos
+*/
 int dupSelect2(int a, int b) {
     if (a == b) {
         return a;
@@ -160,7 +173,9 @@ int dupSelect2(int a, int b) {
     return DUMMY;
 }
 
-// Como nÃ£o hÃ¡ repetiÃ§Ã£o ou a == b ou b == c, o que diminui o nÃºmero de comparaÃ§Ãµes necessÃ¡rias 
+/*
+Como não há repetição ou a == b ou b == c podemos comparar os 3 ao mesmo tempo, o que diminui o número de comparações necessárias 
+*/
 int dupSelect3(int a, int b, int c) {
     if (a == b || b == c) {
         return b;
@@ -168,7 +183,9 @@ int dupSelect3(int a, int b, int c) {
     return DUMMY;
 }
 
-// Filtra candidatos comparando apenas vizinhos, jÃ¡ que nÃ£o temos repetiÃ§Ãµes nos conjuntos A e B
+/*
+Filtra candidatos comparando apenas vizinhos, já que não temos repetições nos conjuntos A e B
+*/
 vector<int> filterCandidates(const vector<int>& merged, long long& filteringComparisons) {
     vector<int> candidates;
 
@@ -189,6 +206,10 @@ vector<int> filterCandidates(const vector<int>& merged, long long& filteringComp
     return candidates;
 }
 
+/*
+Implementação da rede de ordenação bitônica
+Complexidade O(n log^2 n) devido ao número de comparações feitas
+*/
 vector<int> bitonicSortNetwork(vector<int> v, long long& compareExchanges) {
     int n = static_cast<int>(v.size());
     int paddedSize = nextPowerOfTwo(n);
@@ -230,7 +251,7 @@ vector<int> scsSort(const vector<int>& A, const vector<int>& B, Stats& stats) {
 
     auto start = chrono::high_resolution_clock::now();
 
-    // A ordenaÃ§Ã£o nao entra no calculo de complexidade, pois a mesma seria feita localmente antes de entrar no protocolo
+    // A ordenação nao entra no calculo de complexidade, pois a mesma seria feita localmente antes de entrar no protocolo
     vector<int> sortedA = A;
     vector<int> sortedB = B;
     sort(sortedA.begin(), sortedA.end());
@@ -255,9 +276,6 @@ vector<int> scsSort(const vector<int>& A, const vector<int>& B, Stats& stats) {
         }
     }
 
-    // Esta implementacao nao e privada: nao ha garbled circuits, oblivious
-    // transfer ou criptografia. Ela apenas simula a estrutura algoritmica para
-    // comparar custos e comportamento.
     stats.mainOperations =
         stats.bitonicMergeCompareExchanges +
         filteringComparisons +

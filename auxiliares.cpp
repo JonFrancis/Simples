@@ -8,8 +8,11 @@
 #include <stdexcept>
 
 using namespace std;
+/*Funcoes auxiliares do código*/
 
-// Calcula 2^sigma, com verificaÃ§Ã£o de overflow
+/*
+Calcula 2^sigma, com verificação de overflow
+*/
 int pow2(int sigma) {
     if (sigma < 0 || sigma >= 31) {
         throw invalid_argument("sigma deve estar no intervalo [0, 30] para caber em int.");
@@ -17,9 +20,10 @@ int pow2(int sigma) {
     return 1 << sigma;
 }
 
-// Calcula a prÃ³xima potÃªncia de 2 maior ou igual a x, com verificaÃ§Ã£o de overflow
-// Usado para determinar o tamanho do vetor de bits e para padding em bitonic merge/sort
-// Pois o Bitonic Merge e a Bitonic Sorting Network exigem tamanhos que sejam potÃªncias de 2 
+/*
+Calcula a próxima potência de 2 maior ou igual a x, com verificação de overflow
+Usado para determinar o tamanho do vetor de bits e para padding em bitonic merge/sort
+*/
 int nextPowerOfTwo(int x) {
     if (x <= 1) {
         return 1;
@@ -35,6 +39,9 @@ int nextPowerOfTwo(int x) {
     return p;
 }
 
+/*
+Print dos vetores A, B e do resultado da interseccao
+*/
 void printVector(const string& label, const vector<int>& v) {
     cout << label << " = [";
     for (size_t i = 0; i < v.size(); ++i) {
@@ -46,6 +53,9 @@ void printVector(const string& label, const vector<int>& v) {
     cout << "]\n";
 }
 
+/*
+Quantidade de operações medidas para cada algoritmo
+*/
 string measuredOperationsFor(const Stats& stats) {
     if (stats.algorithmName == "BWA") {
         return to_string(stats.mainOperations) + " ANDs";
@@ -61,6 +71,9 @@ string measuredOperationsFor(const Stats& stats) {
            to_string(stats.mainOperations);
 }
 
+/*
+Tabela comparativa final, mostrando o numero de operacoes medidas e o tempo de execucao de cada algoritmo
+*/
 void printComparisonTable(const Stats& bwa, const Stats& pwc, const Stats& scs) {
     cout << "\nQuadro comparativo final\n";
     cout << left
@@ -84,12 +97,18 @@ void printComparisonTable(const Stats& bwa, const Stats& pwc, const Stats& scs) 
     printRow(scs);
 }
 
+/*
+Verifica se dois vetores representam o mesmo conjunto
+*/
 bool sameSet(vector<int> a, vector<int> b) {
     sort(a.begin(), a.end());
     sort(b.begin(), b.end());
     return a == b;
 }
 
+/*
+Leitura do CSV de entrada
+*/
 CsvInput readCsvInput(const string& path) {
     ifstream file(path);
     if (!file) {
