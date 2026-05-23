@@ -260,6 +260,9 @@ Stats runBWA(const vector<int>& A, const vector<int>& B, int sigma) {
     return stats;
 }
 
+// Algoritmo PWC: compara todos os pares possiveis e por isso tem pior caso O(n^2).
+// Melhor caso O(n) quando os conjuntos sao iguais, mas o short-circuit economiza comparacoes apenas nesse caso.
+// Simples e intuitivo, mas ineficiente para n grande. 
 Stats runPWC(const vector<int>& A, const vector<int>& B, int sigma) {
     if (A.size() != B.size()) {
         throw invalid_argument("PWC espera conjuntos A e B com o mesmo tamanho.");
@@ -277,9 +280,6 @@ Stats runPWC(const vector<int>& A, const vector<int>& B, int sigma) {
 
     auto start = chrono::high_resolution_clock::now();
 
-    // PWC e intuitivo: compara pares A[i] e B[j]. O short-circuit abaixo
-    // economiza comparacoes quando encontra um match e marca B[j] como usado,
-    // mas o pior caso continua quadratico.
     vector<int> result;
     vector<bool> matchedB(B.size(), false);
 
@@ -288,9 +288,6 @@ Stats runPWC(const vector<int>& A, const vector<int>& B, int sigma) {
             if (!matchedB[j]) {
                 ++stats.mainOperations;
 
-                // No artigo, a funcao Equal(A[i], B[j]) seria um circuito
-                // garbled. Aqui usamos apenas igualdade de int para fins
-                // didaticos, sem criptografia ou oblivious transfer.
                 if (A[i] == B[j]) {
                     result.push_back(A[i]);
                     matchedB[j] = true;
