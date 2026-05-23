@@ -67,7 +67,7 @@ string measuredOperationsFor(const Stats& stats) {
     long long compareExchanges =
         stats.bitonicMergeCompareExchanges + stats.bitonicSortCompareExchanges;
 
-    return to_string(compareExchanges) + " compare-exchanges; total=" +
+    return to_string(compareExchanges) + " comparacoes; total=" +
            to_string(stats.mainOperations);
 }
 
