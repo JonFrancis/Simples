@@ -16,6 +16,6 @@ Os tres resultados sao iguais? Sim
 Quadro comparativo final
 Algoritmo   Operacoes medidas                         Tempo
        --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-BWA         1048576 ANDs                                 2.3335 ms  
-PWC         38 comparacoes                               0.0018 ms  
-SCS_SORT    56 compare-exchanges; total=71               0.0058 ms  
+BWA         1048576 ANDs                                 1.7171 ms  
+PWC         38 comparacoes                               0.0009 ms  
+SCS_SORT    56 compare-exchanges; total=71               0.0031 ms  

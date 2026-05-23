@@ -1,8 +1,8 @@
 @echo off
 setlocal
 
-echo Compilando main.cpp...
-g++ -std=c++17 main.cpp -O2 -o main
+echo Compilando projeto...
+g++ -std=c++17 main.cpp auxiliares.cpp protocolos.cpp -O2 -o main
 
 if errorlevel 1 (
     echo.
