@@ -221,6 +221,11 @@ bool sameSet(vector<int> a, vector<int> b) {
     return a == b;
 }
 
+// Algoritmo BWA: representa conjuntos como vetores de bits e faz AND bit a bit.
+// Complexidade total vem de criar os vetores de bits (O(n)) e do AND bit a bit (O(2^sigma)).
+// Simples e rapido quando o universo e pequeno.
+// Quando sigma cresce, o vetor tem tamanho 2^sigma e a tecnica fica inviavel em memoria e tempo.
+// Neste codigo sigma e calculado automaticamente a partir de n (o maior valor em A ou B)
 Stats runBWA(const vector<int>& A, const vector<int>& B, int sigma) {
     if (A.size() != B.size()) {
         throw invalid_argument("BWA espera conjuntos A e B com o mesmo tamanho.");
@@ -238,25 +243,8 @@ Stats runBWA(const vector<int>& A, const vector<int>& B, int sigma) {
 
     auto start = chrono::high_resolution_clock::now();
 
-    // BWA e simples e rapido quando o universo e pequeno: cada elemento vira
-    // uma posicao em um vetor de bits. Quando sigma cresce, o vetor tem
-    // tamanho 2^sigma e a tecnica fica inviavel em memoria e tempo.
     vector<int> bitA(stats.universeSize, 0);
     vector<int> bitB(stats.universeSize, 0);
-
-    for (int x : A) {
-        if (x <= 0 || x >= stats.universeSize) {
-            throw out_of_range("Elemento de A fora do universo positivo permitido.");
-        }
-        bitA[x] = 1;
-    }
-
-    for (int y : B) {
-        if (y <= 0 || y >= stats.universeSize) {
-            throw out_of_range("Elemento de B fora do universo positivo permitido.");
-        }
-        bitB[y] = 1;
-    }
 
     vector<int> result;
     for (int i = 0; i < stats.universeSize; ++i) {
@@ -266,9 +254,6 @@ Stats runBWA(const vector<int>& A, const vector<int>& B, int sigma) {
         }
     }
 
-    // Esta implementacao nao e privada. No protocolo real discutido no artigo,
-    // os ANDs sensiveis seriam representados e avaliados dentro de garbled
-    // circuits, sem revelar diretamente os vetores de bits.
     auto end = chrono::high_resolution_clock::now();
     stats.executionTimeMs = chrono::duration<double, milli>(end - start).count();
     stats.intersectionResult = result;
