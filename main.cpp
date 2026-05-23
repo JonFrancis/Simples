@@ -512,19 +512,22 @@ int main() {
     streambuf* originalCoutBuffer = cout.rdbuf(outputFile.rdbuf());
 
     try {
-        const int n = 500000;
-        const int overlapPercent = 50;
-        const int sigma = automaticSigmaFromN(n);
-        const int universeSize = pow2(sigma);
+        const int n = 500000; // Tamanho dos conjuntos A e B
+        const int overlapPercent = 50; // Percentual de sobreposicao entre A e B (0 a 100)
+        const int sigma = automaticSigmaFromN(n); // Quantidade de bits para representar o universo, calculada automaticamente a partir de n
+        const int universeSize = pow2(sigma); // Tamanho do universo, calculado como 2^sigma
 
         mt19937 rng(42);
 
+        // Funcoes auxiliares de geração de conjuntos
         vector<int> A = generateSet(n, universeSize, rng);
         vector<int> B = makeSecondSetWithOverlap(A, n, universeSize, overlapPercent, rng);
 
+        // Execução dos algoritmos mais simples
         Stats bwa = runBWA(A, B, sigma);
         Stats pwc = runPWC(A, B, sigma);
 
+        //Execução do SCS_SORT, mockando a estrutura de garbled circuits
         Stats scs;
         scs.sigma = sigma;
         scs.universeSize = universeSize;
@@ -548,6 +551,7 @@ int main() {
             sameSet(bwa.intersectionResult, pwc.intersectionResult) &&
             sameSet(bwa.intersectionResult, scs.intersectionResult);
 
+        // Prova de que todos algoritmos sao ótimos
         cout << "\nOs tres resultados sao iguais? " << (allEqual ? "Sim" : "Nao") << "\n";
 
         printComparisonTable(bwa, pwc, scs);
