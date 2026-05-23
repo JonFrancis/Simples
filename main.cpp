@@ -3,10 +3,9 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
-#include <random>
 #include <stdexcept>
+#include <sstream>
 #include <string>
-#include <unordered_set>
 #include <vector>
 
 using namespace std;
@@ -23,6 +22,12 @@ struct Stats {
     long long bitonicSortCompareExchanges;
     double executionTimeMs;
     vector<int> intersectionResult;
+};
+
+struct CsvInput {
+    int sigma;
+    vector<int> A;
+    vector<int> B;
 };
 
 // Calcula 2^sigma, com verificação de overflow
@@ -49,127 +54,6 @@ int nextPowerOfTwo(int x) {
         p <<= 1;
     }
     return p;
-}
-
-// Função de 
-// Calcula automaticamente o valor de sigma a partir de n
-// garantindo que o universo seja grande o suficiente para conter os valores dos conjuntos A e B
-int automaticSigmaFromN(int n) {
-    if (n <= 0) {
-        throw invalid_argument("n deve ser positivo para calcular sigma automaticamente.");
-    }
-
-    long long requiredPositiveValues = 2LL * n;
-    long long universeSize = 1;
-    int sigma = 0;
-
-    while (universeSize - 1 < requiredPositiveValues) {
-        if (sigma >= 30) {
-            throw overflow_error("n grande demais para calcular sigma dentro do limite de int.");
-        }
-        ++sigma;
-        universeSize <<= 1;
-    }
-
-    return sigma;
-}
-
-// Função auxiliar de geração de conjuntos
-vector<int> generateSet(int n, int universeSize, mt19937& rng) {
-    if (n < 0) {
-        throw invalid_argument("n nao pode ser negativo.");
-    }
-    if (universeSize <= 1 || n > universeSize - 1) {
-        throw invalid_argument("Universo insuficiente para gerar n inteiros positivos distintos.");
-    }
-
-    vector<int> values;
-    values.reserve(universeSize - 1);
-    for (int x = 1; x < universeSize; ++x) {
-        values.push_back(x);
-    }
-
-    shuffle(values.begin(), values.end(), rng);
-    vector<int> result(values.begin(), values.begin() + n);
-    sort(result.begin(), result.end());
-    return result;
-}
-
-// Funcao auxiliar para criar o segundo conjunto B com um percentual de sobreposição com A
-vector<int> makeSecondSetWithOverlap(
-    const vector<int>& A,
-    int n,
-    int universeSize,
-    int overlapPercent,
-    mt19937& rng
-) {
-    if (n != static_cast<int>(A.size())) {
-        throw invalid_argument("A deve ter tamanho n.");
-    }
-    if (overlapPercent < 0 || overlapPercent > 100) {
-        throw invalid_argument("overlapPercent deve estar entre 0 e 100.");
-    }
-    if (universeSize <= 1 || n > universeSize - 1) {
-        throw invalid_argument("Universo insuficiente para gerar B.");
-    }
-
-    int overlapCount = (n * overlapPercent) / 100;
-    vector<int> shuffledA = A;
-    shuffle(shuffledA.begin(), shuffledA.end(), rng);
-
-    vector<int> B;
-    B.reserve(n);
-    unordered_set<int> chosen;
-    unordered_set<int> inA(A.begin(), A.end());
-
-    for (int i = 0; i < overlapCount; ++i) {
-        B.push_back(shuffledA[i]);
-        chosen.insert(shuffledA[i]);
-    }
-
-    vector<int> outsideA;
-    for (int x = 1; x < universeSize; ++x) {
-        if (inA.find(x) == inA.end()) {
-            outsideA.push_back(x);
-        }
-    }
-
-    shuffle(outsideA.begin(), outsideA.end(), rng);
-    for (int x : outsideA) {
-        if (static_cast<int>(B.size()) == n) {
-            break;
-        }
-        if (chosen.insert(x).second) {
-            B.push_back(x);
-        }
-    }
-
-    // Se o universo for pequeno demais para manter exatamente o percentual,
-    // completamos B com valores positivos ainda nao escolhidos.
-    if (static_cast<int>(B.size()) < n) {
-        vector<int> remaining;
-        for (int x = 1; x < universeSize; ++x) {
-            if (chosen.find(x) == chosen.end()) {
-                remaining.push_back(x);
-            }
-        }
-
-        shuffle(remaining.begin(), remaining.end(), rng);
-        for (int x : remaining) {
-            if (static_cast<int>(B.size()) == n) {
-                break;
-            }
-            B.push_back(x);
-            chosen.insert(x);
-        }
-    }
-
-    if (static_cast<int>(B.size()) != n) {
-        throw runtime_error("Nao foi possivel gerar B com n elementos distintos.");
-    }
-
-    sort(B.begin(), B.end());
-    return B;
 }
 
 void printVector(const string& label, const vector<int>& v) {
@@ -227,6 +111,53 @@ bool sameSet(vector<int> a, vector<int> b) {
     return a == b;
 }
 
+CsvInput readCsvInput(const string& path) {
+    ifstream file(path);
+    if (!file) {
+        throw runtime_error("Nao foi possivel abrir o CSV: " + path);
+    }
+
+    CsvInput input;
+    input.sigma = -1;
+
+    string line;
+    getline(file, line);
+
+    while (getline(file, line)) {
+        if (line.empty()) {
+            continue;
+        }
+
+        string sigmaText, setText, valueText;
+        stringstream ss(line);
+
+        getline(ss, sigmaText, ',');
+        getline(ss, setText, ',');
+        getline(ss, valueText, ',');
+
+        int sigma = stoi(sigmaText);
+        int value = stoi(valueText);
+
+        if (input.sigma == -1) {
+            input.sigma = sigma;
+        }
+
+        if (setText == "A") {
+            input.A.push_back(value);
+        } else if (setText == "B") {
+            input.B.push_back(value);
+        } else {
+            throw runtime_error("Set invalido no CSV: " + setText);
+        }
+    }
+
+    if (input.sigma == -1) {
+        throw runtime_error("Sigma nao foi lido do CSV: " + path);
+    }
+
+    return input;
+}
+
 // Algoritmo BWA: representa conjuntos como vetores de bits e faz AND bit a bit.
 // Complexidade total vem de criar os vetores de bits (O(n)) e do AND bit a bit (O(2^sigma)).
 // Simples e rapido quando o universo e pequeno.
@@ -251,6 +182,13 @@ Stats runBWA(const vector<int>& A, const vector<int>& B, int sigma) {
 
     vector<int> bitA(stats.universeSize, 0);
     vector<int> bitB(stats.universeSize, 0);
+
+    for (int value : A) {
+        bitA[value] = 1;
+    }
+    for (int value : B) {
+        bitB[value] = 1;
+    }
 
     vector<int> result;
     for (int i = 0; i < stats.universeSize; ++i) {
@@ -482,6 +420,28 @@ vector<int> scsSort(const vector<int>& A, const vector<int>& B, Stats& stats) {
 }
 
 int main() {
+    cout << "Escolha o CSV:\n";
+    cout << "1. data/bwa_favoravel.csv\n";
+    cout << "2. data/pwc_favoravel.csv\n";
+    cout << "3. data/scs_sort_favoravel.csv\n";
+    cout << "4. Informar caminho manualmente\n";
+    cout << "Opcao: ";
+
+    string csvPath;
+    int csvOption = 1;
+    cin >> csvOption;
+
+    if (csvOption == 1) {
+        csvPath = "data/bwa_favoravel.csv";
+    } else if (csvOption == 2) {
+        csvPath = "data/pwc_favoravel.csv";
+    } else if (csvOption == 3) {
+        csvPath = "data/scs_sort_favoravel.csv";
+    } else {
+        cout << "Caminho do CSV: ";
+        cin >> csvPath;
+    }
+
     ofstream outputFile("saida.txt");
     if (!outputFile) {
         cerr << "Erro: nao foi possivel criar o arquivo saida.txt\n";
@@ -491,15 +451,12 @@ int main() {
     streambuf* originalCoutBuffer = cout.rdbuf(outputFile.rdbuf());
 
     try {
-        const int n = 500000; // Tamanho dos conjuntos A e B
-        const int overlapPercent = 50; // Percentual de sobreposicao entre A e B (0 a 100)
-        const int sigma = automaticSigmaFromN(n); // Quantidade de bits para representar o universo, calculada automaticamente a partir de n
-        const int universeSize = pow2(sigma); // Tamanho do universo, calculado como 2^sigma
-
-        mt19937 rng(42);
-
-        vector<int> A = generateSet(n, universeSize, rng);
-        vector<int> B = makeSecondSetWithOverlap(A, n, universeSize, overlapPercent, rng);
+        CsvInput input = readCsvInput(csvPath);
+        int sigma = input.sigma;
+        int universeSize = pow2(sigma);
+        vector<int> A = input.A;
+        vector<int> B = input.B;
+        int n = static_cast<int>(A.size());
 
         // Execução dos algoritmos mais simples
         Stats bwa = runBWA(A, B, sigma);
@@ -513,9 +470,10 @@ int main() {
 
         cout << "Parametros\n";
         cout << "n = " << n << "\n";
-        cout << "sigma automatico pelo n = " << sigma << "\n";
+        cout << "CSV usado = " << csvPath << "\n";
+        cout << "sigma lido do CSV = " << sigma << "\n";
         cout << "universeSize = 2^sigma = " << universeSize << "\n";
-        cout << "overlapPercent = " << overlapPercent << "%\n\n";
+        cout << "\n";
 
         printVector("Conjunto A", A);
         printVector("Conjunto B", B);
