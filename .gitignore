@@ -1,0 +1,16 @@
+# Build outputs
+*.exe
+*.out
+*.o
+
+# Temporary files
+*.tmp
+*.log
+
+# IDE/editor files
+.vscode/
+.idea/
+
+# OS files
+Thumbs.db
+Desktop.ini
