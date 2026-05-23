@@ -6,6 +6,7 @@
 # Temporary files
 *.tmp
 *.log
+saida.txt
 
 # IDE/editor files
 .vscode/
