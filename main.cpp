@@ -25,6 +25,7 @@ struct Stats {
     vector<int> intersectionResult;
 };
 
+// Calcula 2^sigma, com verificação de overflow
 int pow2(int sigma) {
     if (sigma < 0 || sigma >= 31) {
         throw invalid_argument("sigma deve estar no intervalo [0, 30] para caber em int.");
@@ -32,6 +33,9 @@ int pow2(int sigma) {
     return 1 << sigma;
 }
 
+// Calcula a próxima potência de 2 maior ou igual a x, com verificação de overflow
+// Usado para determinar o tamanho do vetor de bits e para padding em bitonic merge/sort
+// Pois o Bitonic Merge e a Bitonic Sorting Network exigem tamanhos que sejam potências de 2 
 int nextPowerOfTwo(int x) {
     if (x <= 1) {
         return 1;
@@ -47,14 +51,14 @@ int nextPowerOfTwo(int x) {
     return p;
 }
 
+// Função de 
+// Calcula automaticamente o valor de sigma a partir de n
+// garantindo que o universo seja grande o suficiente para conter os valores dos conjuntos A e B
 int automaticSigmaFromN(int n) {
     if (n <= 0) {
         throw invalid_argument("n deve ser positivo para calcular sigma automaticamente.");
     }
 
-    // Como os elementos validos sao positivos, o universo contem 2^sigma - 1
-    // valores uteis. Usamos 2n para permitir ate dois conjuntos disjuntos de
-    // tamanho n, sem precisar ajustar sigma manualmente.
     long long requiredPositiveValues = 2LL * n;
     long long universeSize = 1;
     int sigma = 0;
@@ -70,6 +74,7 @@ int automaticSigmaFromN(int n) {
     return sigma;
 }
 
+// Função auxiliar de geração de conjuntos
 vector<int> generateSet(int n, int universeSize, mt19937& rng) {
     if (n < 0) {
         throw invalid_argument("n nao pode ser negativo.");
@@ -90,6 +95,7 @@ vector<int> generateSet(int n, int universeSize, mt19937& rng) {
     return result;
 }
 
+// Funcao auxiliar para criar o segundo conjunto B com um percentual de sobreposição com A
 vector<int> makeSecondSetWithOverlap(
     const vector<int>& A,
     int n,
@@ -331,6 +337,9 @@ void bitonicMergeAscending(vector<int>& v, int start, int size, long long& count
     bitonicMergeAscending(v, start + half, half, counter);
 }
 
+// O Bitonic Merge tem complexidade O(n log n) e produz uma sequencia fixa de comparacoes
+// Escolha foi feita para simular o que aconteceria no circuito garbled
+// É um divisão e conquista que ordena uma sequencia bitonica (primeira metade crescente, segunda metade decrescente) em ordem crescente
 vector<int> bitonicMergeSortedSets(vector<int> A, vector<int> B, long long& counter) {
     sort(A.begin(), A.end());
     sort(B.begin(), B.end());
@@ -345,9 +354,6 @@ vector<int> bitonicMergeSortedSets(vector<int> A, vector<int> B, long long& coun
     int originalSize = static_cast<int>(merged.size());
     int paddedSize = nextPowerOfTwo(originalSize);
 
-    // Bitonic Merge trabalha naturalmente com tamanho potencia de 2. Como os
-    // elementos validos sao positivos, DUMMY=-1 pode ser usado como padding e
-    // removido depois do merge.
     while (static_cast<int>(merged.size()) < paddedSize) {
         merged.push_back(DUMMY);
     }
@@ -358,6 +364,7 @@ vector<int> bitonicMergeSortedSets(vector<int> A, vector<int> B, long long& coun
     return merged;
 }
 
+// A última comparação é feita entre os dois últimos elementos
 int dupSelect2(int a, int b) {
     if (a == b) {
         return a;
@@ -365,6 +372,7 @@ int dupSelect2(int a, int b) {
     return DUMMY;
 }
 
+// Como não há repetição ou a == b ou b == c, o que diminui o número de comparações necessárias 
 int dupSelect3(int a, int b, int c) {
     if (a == b || b == c) {
         return b;
@@ -372,6 +380,7 @@ int dupSelect3(int a, int b, int c) {
     return DUMMY;
 }
 
+// Filtra candidatos comparando apenas vizinhos, já que não temos repetições nos conjuntos A e B
 vector<int> filterCandidates(const vector<int>& merged, long long& filteringComparisons) {
     vector<int> candidates;
 
@@ -382,8 +391,6 @@ vector<int> filterCandidates(const vector<int>& merged, long long& filteringComp
     candidates.reserve(merged.size() / 2);
 
     for (size_t i = 1; i + 1 < merged.size(); i += 2) {
-        // DupSelect3 contem duas igualdades conceituais. Em um circuito, a
-        // estrutura seria fixa; aqui contamos as duas comparacoes didaticas.
         filteringComparisons += 2;
         candidates.push_back(dupSelect3(merged[i - 1], merged[i], merged[i + 1]));
     }
@@ -418,6 +425,9 @@ vector<int> bitonicSortNetwork(vector<int> v, long long& compareExchanges) {
     return v;
 }
 
+// SCS_SORT ordena os conjuntos, compara apenas vizinhos e evita a comparacao todos-contra-todos.
+// Complexidade: O(n log^2 n). As ordenacoes locais e o Bitonic Merge custam O(n log n)
+// Bitonic Sorting Network final domina com O(n log^2 n).
 vector<int> scsSort(const vector<int>& A, const vector<int>& B, Stats& stats) {
     if (A.size() != B.size()) {
         throw invalid_argument("SCS_SORT espera conjuntos A e B com o mesmo tamanho.");
@@ -432,30 +442,17 @@ vector<int> scsSort(const vector<int>& A, const vector<int>& B, Stats& stats) {
 
     auto start = chrono::high_resolution_clock::now();
 
-    // A ordenacao local inicial pode usar std::sort, pois no protocolo do
-    // artigo ela ocorre localmente em cada parte antes da etapa sensivel.
+    // A ordenação nao entra no calculo de complexidade, pois a mesma seria feita localmente antes de entrar no protocolo
     vector<int> sortedA = A;
     vector<int> sortedB = B;
     sort(sortedA.begin(), sortedA.end());
     sort(sortedB.begin(), sortedB.end());
 
-    // Ordenar faz valores iguais ficarem adjacentes depois do merge; assim o
-    // SCS_SORT compara apenas vizinhos em vez de todos os pares.
-    //
-    // Em computacao privada, estruturas com fluxo dependente dos dados, como
-    // merge comum, quicksort ou mergesort comum, nao representam bem a
-    // execucao privada. A sequencia de comparacoes de Bitonic Merge e fixa,
-    // por isso ela se encaixa melhor na ideia de circuitos garbled.
     vector<int> merged = bitonicMergeSortedSets(sortedA, sortedB, stats.bitonicMergeCompareExchanges);
 
     long long filteringComparisons = 0;
     vector<int> candidates = filterCandidates(merged, filteringComparisons);
 
-    // Revelar os candidatos diretamente vazaria as posicoes dos matches no
-    // vetor ordenado. O artigo usa uma etapa de embaralhamento/ordenacao para
-    // esconder essa posicao. Aqui simulamos a ideia ordenando os candidatos
-    // com uma Bitonic Sorting Network, cuja sequencia de comparacoes tambem e
-    // fixa e mais compativel com garbled circuits do que mergesort comum.
     int paddedCandidateSize = nextPowerOfTwo(static_cast<int>(candidates.size()));
     while (static_cast<int>(candidates.size()) < paddedCandidateSize) {
         candidates.push_back(DUMMY);
@@ -501,7 +498,6 @@ int main() {
 
         mt19937 rng(42);
 
-        // Funcoes auxiliares de geração de conjuntos
         vector<int> A = generateSet(n, universeSize, rng);
         vector<int> B = makeSecondSetWithOverlap(A, n, universeSize, overlapPercent, rng);
 
