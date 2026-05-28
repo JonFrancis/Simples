@@ -25,6 +25,14 @@
 
 using namespace std;
 
+/*
+BWA representa conjuntos como vetores de bits e faz AND bit a bit.
+BWA e eficiente quando o universo e pequeno, mas cresce com 2^sigma.
+PWC compara todos os pares possiveis e por isso tem pior caso O(n^2).
+SCS_SORT recebe os conjuntos ordenados, compara apenas vizinhos e evita a comparacao todos-contra-todos.
+A etapa final do SCS_SORT ordena candidatos para esconder a posicao dos matches.
+Como a ordenacao final precisa ter sequencia fixa de comparacoes, usamos Bitonic Sorting Network.
+*/
 int main() {
     cout << "Escolha o CSV:\n";
     cout << "1. data/bwa_favoravel.csv\n";
@@ -107,13 +115,3 @@ int main() {
     return 0;
 }
 
-/*
-BWA representa conjuntos como vetores de bits e faz AND bit a bit.
-BWA e eficiente quando o universo e pequeno, mas cresce com 2^sigma.
-PWC compara todos os pares possiveis e por isso tem pior caso O(n^2).
-SCS_SORT ordena os conjuntos, compara apenas vizinhos e evita a comparacao todos-contra-todos.
-A etapa final do SCS_SORT ordena candidatos para esconder a posicao dos matches.
-Como a ordenacao final precisa ter sequencia fixa de comparacoes, usamos Bitonic Sorting Network.
-Esta implementacao nao implementa garbled circuits reais.
-Ela serve para demonstrar a estrutura dos algoritmos e suas complexidades.
-*/

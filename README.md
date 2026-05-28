@@ -1,42 +1,43 @@
 # Projeto de PCA
 
-README padrao do projeto.
-
 ## Descricao
 
-Escreva aqui uma breve descricao do projeto, explicando o objetivo principal e o que o programa faz.
+Trabalho final de PCA, nesse trabalho foram comparados 3 protocolos de PSI, Bitwise-And, Pairwise Comparisons e um protocolo proposto pelo artigo usado como referência SCS-SORT.
 
 ## Como executar
 
-Descreva aqui os passos para compilar e executar o projeto.
+O projeto usa C++17 e precisa do compilador `g++` instalado.
 
-Exemplo:
+### Linux
+
+No terminal, entre na pasta do projeto e execute o script:
 
 ```bash
-g++ main.cpp -o main
-./main
+./executar.sh
 ```
 
-No Windows, se estiver usando o arquivo `executar.bat`, voce pode executar:
+Caso o script nao tenha permissao de execucao, use:
 
 ```bash
+chmod +x executar.sh
+./executar.sh
+```
+
+### Windows
+
+No Prompt de Comando ou PowerShell, entre na pasta do projeto e execute o arquivo `.bat`:
+
+```bat
 executar.bat
 ```
 
-## Estrutura do projeto
-
-```text
-.
-├── main.cpp
-├── executar.bat
-├── saida.txt
-└── README.md
-```
+O programa ira pedir qual arquivo CSV deve ser usado e salvara o resultado em `saida.txt`.
 
 ## Observacoes
 
-Adicione aqui informacoes importantes, limitacoes, exemplos de entrada/saida ou qualquer detalhe necessario para entender o projeto.
+Para entradas são usados os arquivos csv dentro da pasta data, 3 arquivos de teste foram criados, um favorável a cada algoritmo, caso queira criar mais arquivos de testes siga o padrão dos testes já feitos.
 
-## Autor
+## Autores
 
-Coloque aqui seu nome.
+João Francisco Gomes Targino
+Kássio Medeiros Alves 
