@@ -140,9 +140,6 @@ Escolha foi feita para simular o que aconteceria no circuito garbled
 É uma divisão e conquista que ordena uma sequencia bitonica (primeira metade crescente, segunda metade decrescente) em ordem crescente
 */
 vector<int> bitonicMergeSortedSets(vector<int> A, vector<int> B, long long& counter) {
-    sort(A.begin(), A.end());
-    sort(B.begin(), B.end());
-
     reverse(B.begin(), B.end());
 
     vector<int> merged;
@@ -234,12 +231,20 @@ vector<int> bitonicSortNetwork(vector<int> v, long long& compareExchanges) {
     return v;
 }
 
-// SCS_SORT ordena os conjuntos, compara apenas vizinhos e evita a comparacao todos-contra-todos.
-// Complexidade: O(n log^2 n). As ordenacoes locais e o Bitonic Merge custam O(n log n)
-// Bitonic Sorting Network final domina com O(n log^2 n).
+/*
+SCS_SORT recebe os conjuntos ja ordenados, compara apenas vizinhos e evita a comparacao todos-contra-todos.
+Complexidade: O(n log^2 n). O Bitonic Merge custa O(n log n)
+Bitonic Sorting Network final domina com O(n log^2 n).
+*/
 vector<int> scsSort(const vector<int>& A, const vector<int>& B, Stats& stats) {
     if (A.size() != B.size()) {
         throw invalid_argument("SCS_SORT espera conjuntos A e B com o mesmo tamanho.");
+    }
+    if (!is_sorted(A.begin(), A.end())) {
+        throw invalid_argument("SCS_SORT espera que o conjunto A esteja ordenado em ordem crescente.");
+    }
+    if (!is_sorted(B.begin(), B.end())) {
+        throw invalid_argument("SCS_SORT espera que o conjunto B esteja ordenado em ordem crescente.");
     }
 
     stats.algorithmName = "SCS_SORT";
@@ -251,13 +256,7 @@ vector<int> scsSort(const vector<int>& A, const vector<int>& B, Stats& stats) {
 
     auto start = chrono::high_resolution_clock::now();
 
-    // A ordenação nao entra no calculo de complexidade, pois a mesma seria feita localmente antes de entrar no protocolo
-    vector<int> sortedA = A;
-    vector<int> sortedB = B;
-    sort(sortedA.begin(), sortedA.end());
-    sort(sortedB.begin(), sortedB.end());
-
-    vector<int> merged = bitonicMergeSortedSets(sortedA, sortedB, stats.bitonicMergeCompareExchanges);
+    vector<int> merged = bitonicMergeSortedSets(A, B, stats.bitonicMergeCompareExchanges);
 
     long long filteringComparisons = 0;
     vector<int> candidates = filterCandidates(merged, filteringComparisons);
